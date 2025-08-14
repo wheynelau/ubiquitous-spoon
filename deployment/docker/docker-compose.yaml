@@ -5,14 +5,14 @@ services:
   mongo:
     image: mongo
     restart: always
-    env_file: env_file
+    env_file: sample.env
 
   mongo-express:
     image: mongo-express
     restart: always
     ports:
       - 8081:8081
-    env_file: env_file
+    env_file: sample.env
 
 
   redis:
@@ -29,8 +29,7 @@ services:
       - mongo
       - redis
       - backend
-    env_file:
-      - env_file
+    env_file: sample.env
 
   backend:
     build:
@@ -41,5 +40,4 @@ services:
     depends_on:
       - mongo
       - redis
-    env_file:
-      - env_file
+    env_file: sample.env

@@ -15,6 +15,7 @@ RUN cargo build --release --bin backend
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:trixie-slim AS runtime
+LABEL org.opencontainers.image.source="https://github.com/wheynelau/ubiquitous-spoon"
 WORKDIR /app
 COPY --from=builder /app/target/release/backend /usr/local/bin
 ENTRYPOINT ["/usr/local/bin/backend"]

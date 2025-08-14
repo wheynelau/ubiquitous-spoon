@@ -20,6 +20,7 @@ COPY . .
 RUN dx bundle --platform web --release --out-dir web
 
 FROM nginx:alpine AS runtime
+LABEL org.opencontainers.image.source="https://github.com/wheynelau/ubiquitous-spoon"
 COPY --from=builder /app/web/public /usr/share/nginx/html
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
