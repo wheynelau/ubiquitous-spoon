@@ -1,7 +1,7 @@
 use axum::{
     Json, Router,
     extract::{Path, State},
-    http::StatusCode,
+    http::{StatusCode, Method, HeaderValue, header},
     response::Redirect,
     routing::{get, post},
 };
@@ -21,7 +21,15 @@ pub fn app(state: AppState) -> Router {
         .route("/shorten", post(create_url))
         .route("/{short_code}", get(redirect_url))
         .layer(
-            CorsLayer::permissive()
+            CorsLayer::new()
+                .allow_origin(
+                    std::env::var("FRONTEND_URL")
+                        .unwrap_or_else(|_| "http://localhost:8080".into())
+                        .parse::<HeaderValue>()
+                        .unwrap()
+                )
+                .allow_methods([Method::GET, Method::POST])
+                .allow_headers([header::CONTENT_TYPE])
         )
         .layer(TraceLayer::new_for_http())
         .with_state(state)

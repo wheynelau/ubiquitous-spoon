@@ -5,20 +5,15 @@ services:
   mongo:
     image: mongo
     restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
+    env_file: env_file
 
   mongo-express:
     image: mongo-express
     restart: always
     ports:
       - 8081:8081
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password
-      ME_CONFIG_MONGODB_URL: mongodb://admin:password@mongo:27017/
-      ME_CONFIG_BASICAUTH: false
+    env_file: env_file
+
 
   redis:
     image: redis
@@ -34,16 +29,17 @@ services:
       - mongo
       - redis
       - backend
-    environment:
-      BACKEND_URL: http://backend:3000
+    env_file:
+      - env_file
 
   backend:
     build:
       context: ../../backend
       dockerfile: Dockerfile
+    ports:
+      - 3000:3000
     depends_on:
       - mongo
       - redis
-    environment:
-      MONGO_URL: mongodb://admin:password@mongo:27017/
-      REDIS_URL: redis://redis:6379
+    env_file:
+      - env_file
