@@ -8,8 +8,6 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
-    ports:
-      - 27017:27017
 
   mongo-express:
     image: mongo-express
@@ -25,5 +23,27 @@ services:
   redis:
     image: redis
     restart: always
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
     ports:
-      - 6379:6379
+      - 8080:80 # nginx
+    depends_on:
+      - mongo
+      - redis
+      - backend
+    environment:
+      BACKEND_URL: http://backend:3000
+
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+      - redis
+    environment:
+      MONGO_URL: mongodb://admin:password@mongo:27017/
+      REDIS_URL: redis://redis:6379
