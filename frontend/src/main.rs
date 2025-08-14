@@ -32,7 +32,7 @@ fn app() -> Element {
 
         is_loading.set(true);
         error_message.set(String::new());
-        
+
         spawn(async move {
             match shorten_url_request(url).await {
                 Ok(response) => {
@@ -52,9 +52,7 @@ fn app() -> Element {
             spawn(async move {
                 if let Some(window) = web_sys::window() {
                     let clipboard = window.navigator().clipboard();
-                    let _ = wasm_bindgen_futures::JsFuture::from(
-                        clipboard.write_text(&url)
-                    ).await;
+                    let _ = wasm_bindgen_futures::JsFuture::from(clipboard.write_text(&url)).await;
                 }
             });
         }
@@ -67,7 +65,7 @@ fn app() -> Element {
                 style: "text-align: center; color: #333; margin-bottom: 30px;",
                 "URL Shortener"
             }
-            
+
             div {
                 style: "margin-bottom: 20px;",
                 input {
@@ -133,18 +131,18 @@ async fn shorten_url_request(url: String) -> Result<ShortenResponse, String> {
     payload.insert("url", url);
     payload.insert("expiration_date", "2023-12-31".to_string());
 
+    let backend_url =
+        std::env::var("BACKEND_URL").unwrap_or_else(|_| "http://127.0.0.1:3000".into());
+
     let response = client
-        .post("http://127.0.0.1:3000/shorten")
+        .post(format!("{}/shorten", backend_url))
         .json(&payload)
         .send()
         .await
         .map_err(|e| e.to_string())?;
 
     if response.status().is_success() {
-        let shortened: ShortenResponse = response
-            .json()
-            .await
-            .map_err(|e| e.to_string())?;
+        let shortened: ShortenResponse = response.json().await.map_err(|e| e.to_string())?;
         Ok(shortened)
     } else {
         Err(format!("HTTP error: {}", response.status()))
