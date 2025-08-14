@@ -10,8 +10,8 @@ simple implementation of a url shortener, for learning
 2. Redirect to the original URL when the shortened URL is accessed
 
 Optional requirements
-[ ] - Custom alias for shortened URLs
-[ ] - Expiration date for shortened URLs
+[ ] - Custom alias for shortened URLs  
+[ ] - Expiration date for shortened URLs  
 
 ## Architecture
 
@@ -20,4 +20,4 @@ Currently runs a simple frontend, backend with redis and mongodb.
 ## Learning points
 - Some axum
 - Github CICD
-- 
+- Dioxus - unnecessary for this project, was only used for testing
