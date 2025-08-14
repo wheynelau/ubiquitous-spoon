@@ -1,13 +1,13 @@
 use axum::{
     Json, Router,
     extract::{Path, State},
-    http::{StatusCode, Method, HeaderValue, header},
+    http::{HeaderValue, Method, StatusCode, header},
     response::Redirect,
     routing::{get, post},
 };
 
 use base62;
-use tower_http::{trace::TraceLayer, cors::CorsLayer};
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use tracing::instrument;
 
 use super::common::{build_url, internal_error};
@@ -26,10 +26,10 @@ pub fn app(state: AppState) -> Router {
                     std::env::var("FRONTEND_URL")
                         .unwrap_or_else(|_| "http://localhost:8080".into())
                         .parse::<HeaderValue>()
-                        .unwrap()
+                        .unwrap(),
                 )
                 .allow_methods([Method::GET, Method::POST])
-                .allow_headers([header::CONTENT_TYPE])
+                .allow_headers([header::CONTENT_TYPE]),
         )
         .layer(TraceLayer::new_for_http())
         .with_state(state)
@@ -60,7 +60,9 @@ async fn create_url(
         std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".into()),
         short_code
     );
-    let response = UrlResponse { short_code: short_url };
+    let response = UrlResponse {
+        short_code: short_url,
+    };
     Ok(Json(response))
 }
 
