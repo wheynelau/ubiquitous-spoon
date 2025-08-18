@@ -9,9 +9,9 @@ simple implementation of a url shortener, for learning
 1. Shorten a URL
 2. Redirect to the original URL when the shortened URL is accessed
 
-Optional requirements
-[ ] - Custom alias for shortened URLs  
-[ ] - Expiration date for shortened URLs  
+Optional requirements:   
+[ ] - Custom alias for shortened URLs   
+[x] - Expiration date for shortened URLs  
 
 ## Architecture
 
