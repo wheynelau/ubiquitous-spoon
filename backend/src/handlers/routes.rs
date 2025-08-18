@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -45,11 +47,13 @@ async fn create_url(
     tracing::debug!("Creating URL for: {}", input.url);
 
     let id = redis_get_idx(&mut state.redis).await?;
-    let short_code = base62::encode(id);
+    let short_code = format!("{:0>8}", base62::encode(id));
     let url = Urls {
         id: short_code.clone(),
         long_url: build_url(&input.url),
-        expiration_date: input.expiration_date,
+        // hard code this to current date + 1 hour
+        expiration_date: mongodb::bson::DateTime::now()
+            .saturating_add_duration(Duration::from_secs(3600)),
     };
     mongodb_put(&state.mongodb, url)
         .await

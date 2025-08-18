@@ -1,3 +1,7 @@
+use std::time::Duration;
+
+use mongodb::IndexModel;
+use mongodb::options::IndexOptions;
 use mongodb::{Client, bson::doc};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -43,8 +47,19 @@ async fn main() {
 
     println!("Connected to Redis!");
 
+    let index_options = IndexOptions::builder()
+        .expire_after(Duration::from_secs(60))
+        .build();
+    let index = IndexModel::builder()
+        .keys(doc! { "expiration_date": 1 })
+        .options(index_options)
+        .build();
+
+    let collection = mongodb_client.database("axum-mongo").collection("urls");
+    collection.create_index(index).await.unwrap();
+
     let state = AppState {
-        mongodb: mongodb_client.database("axum-mongo").collection("members"),
+        mongodb: collection,
         redis: redis_connection,
     };
 
