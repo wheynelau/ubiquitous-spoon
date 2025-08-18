@@ -7,13 +7,12 @@ pub struct Urls {
     #[serde(rename = "_id")]
     pub id: String, // hash serving as short code
     pub long_url: String,
-    pub expiration_date: String, // placeholder, should ideally be a different format
+    pub expiration_date: mongodb::bson::DateTime,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PostData {
     pub url: String,
-    pub expiration_date: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

@@ -129,7 +129,6 @@ async fn shorten_url_request(url: String) -> Result<ShortenResponse, String> {
     let client = reqwest::Client::new();
     let mut payload = HashMap::new();
     payload.insert("url", url);
-    payload.insert("expiration_date", "2023-12-31".to_string());
 
     let backend_url =
         std::env::var("BACKEND_URL").unwrap_or_else(|_| "http://127.0.0.1:3000".into());

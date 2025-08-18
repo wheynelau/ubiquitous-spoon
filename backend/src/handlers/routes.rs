@@ -14,7 +14,7 @@ use tracing::instrument;
 
 use super::common::{build_url, internal_error};
 use super::db::{mongodb_lookup, mongodb_put};
-use super::redis::{redis_get_idx, redis_get_key, redis_set_ex};
+use super::redis::{get_idx, redis_get_key, redis_set_ex};
 use crate::models::{AppState, PostData, UrlResponse, Urls};
 
 // defining routes and state
@@ -46,7 +46,7 @@ async fn create_url(
     // we need the redis counter, but for now use rand id
     tracing::debug!("Creating URL for: {}", input.url);
 
-    let id = redis_get_idx(&mut state.redis).await?;
+    let id = get_idx(&mut state.redis).await?;
     let short_code = format!("{:0>8}", base62::encode(id));
     let url = Urls {
         id: short_code.clone(),

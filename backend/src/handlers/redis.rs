@@ -1,10 +1,37 @@
 use axum::http::StatusCode;
 use redis::{AsyncCommands, pipe};
 use tracing::instrument;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 const KEY: &str = "counter";
+static BATCH_UPPER: AtomicU64 = AtomicU64::new(0);
+static BATCH_LOWER: AtomicU64 = AtomicU64::new(0);
+
+pub async fn get_idx(redis: &mut redis::aio::MultiplexedConnection) -> Result<u64, (StatusCode, String)> {
+    let curr = BATCH_LOWER.fetch_add(1, Ordering::SeqCst);
+    if curr >= BATCH_UPPER.load(Ordering::SeqCst) {
+        increment_redis_batch(redis).await?;
+    }
+    Ok(curr)
+}
+
+#[instrument]
+async fn increment_redis_batch(redis: &mut redis::aio::MultiplexedConnection,) -> Result<(), (StatusCode, String)> {
+    let (old_val, new_val): (u64, u64) = pipe()
+        .atomic() // This makes it a transaction (MULTI/EXEC)
+        .get(KEY)
+        .incr(KEY, 1000) // take a batch of 1000
+        .query_async(redis)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    BATCH_UPPER.store(new_val, Ordering::SeqCst);
+    BATCH_LOWER.store(old_val + 1, Ordering::SeqCst); // add one because we are incrementing the lower bound
+    Ok(())
+}
 
 // Post increment idx
+#[allow(dead_code)]
 #[instrument]
 pub async fn redis_get_idx(
     redis: &mut redis::aio::MultiplexedConnection,
@@ -42,4 +69,8 @@ pub async fn redis_get_key(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Ok(value)
+}
+
+pub async fn initialize_counter(redis: &mut redis::aio::MultiplexedConnection) -> Result<(), (StatusCode, String)> {
+    increment_redis_batch(redis).await
 }

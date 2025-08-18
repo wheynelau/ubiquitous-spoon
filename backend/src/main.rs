@@ -47,6 +47,9 @@ async fn main() {
 
     println!("Connected to Redis!");
 
+    // Initialize counter batch
+    handlers::redis::initialize_counter(&mut redis_connection).await.unwrap();
+
     let index_options = IndexOptions::builder()
         .expire_after(Duration::from_secs(60))
         .build();
