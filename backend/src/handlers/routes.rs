@@ -87,6 +87,8 @@ async fn redirect_url(
         .map_err(internal_error)?
         .ok_or((StatusCode::NOT_FOUND, "Short URL not found".to_string()))?;
 
+    // should we block this?
+    // immediate use of url after shortening
     let long_url = url_doc.long_url.clone();
     tokio::spawn(async move {
         if let Err(e) = redis_set_ex(&mut state.redis, &short_code, &url_doc.long_url, 600).await {

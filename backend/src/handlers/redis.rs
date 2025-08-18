@@ -1,13 +1,15 @@
 use axum::http::StatusCode;
 use redis::{AsyncCommands, pipe};
-use tracing::instrument;
 use std::sync::atomic::{AtomicU64, Ordering};
+use tracing::instrument;
 
 const KEY: &str = "counter";
 static BATCH_UPPER: AtomicU64 = AtomicU64::new(0);
 static BATCH_LOWER: AtomicU64 = AtomicU64::new(0);
 
-pub async fn get_idx(redis: &mut redis::aio::MultiplexedConnection) -> Result<u64, (StatusCode, String)> {
+pub async fn get_idx(
+    redis: &mut redis::aio::MultiplexedConnection,
+) -> Result<u64, (StatusCode, String)> {
     let curr = BATCH_LOWER.fetch_add(1, Ordering::SeqCst);
     if curr >= BATCH_UPPER.load(Ordering::SeqCst) {
         increment_redis_batch(redis).await?;
@@ -16,7 +18,9 @@ pub async fn get_idx(redis: &mut redis::aio::MultiplexedConnection) -> Result<u6
 }
 
 #[instrument]
-async fn increment_redis_batch(redis: &mut redis::aio::MultiplexedConnection,) -> Result<(), (StatusCode, String)> {
+async fn increment_redis_batch(
+    redis: &mut redis::aio::MultiplexedConnection,
+) -> Result<(), (StatusCode, String)> {
     let (old_val, new_val): (u64, u64) = pipe()
         .atomic() // This makes it a transaction (MULTI/EXEC)
         .get(KEY)
@@ -71,6 +75,8 @@ pub async fn redis_get_key(
     Ok(value)
 }
 
-pub async fn initialize_counter(redis: &mut redis::aio::MultiplexedConnection) -> Result<(), (StatusCode, String)> {
+pub async fn initialize_counter(
+    redis: &mut redis::aio::MultiplexedConnection,
+) -> Result<(), (StatusCode, String)> {
     increment_redis_batch(redis).await
 }
