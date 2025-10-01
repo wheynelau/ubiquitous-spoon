@@ -16,6 +16,7 @@ use super::common::{build_url, internal_error};
 use super::db::{mongodb_lookup, mongodb_put};
 use super::redis::{get_idx, redis_get_key, redis_set_ex};
 use crate::models::{AppState, PostData, UrlResponse, Urls};
+use crate::{BASE_URL, FRONTEND_URL};
 
 // defining routes and state
 pub fn app(state: AppState) -> Router {
@@ -24,12 +25,7 @@ pub fn app(state: AppState) -> Router {
         .route("/{short_code}", get(redirect_url))
         .layer(
             CorsLayer::new()
-                .allow_origin(
-                    std::env::var("FRONTEND_URL")
-                        .unwrap_or_else(|_| "http://localhost:8080".into())
-                        .parse::<HeaderValue>()
-                        .unwrap(),
-                )
+                .allow_origin(FRONTEND_URL.parse::<HeaderValue>().unwrap())
                 .allow_methods([Method::GET, Method::POST])
                 .allow_headers([header::CONTENT_TYPE]),
         )
@@ -49,9 +45,13 @@ async fn create_url(
     let id = get_idx(&mut state.redis).await?;
     let short_code = format!("{:0>8}", base62::encode(id));
     let duration = Duration::from_secs(input.expiration_days * 24 * 60 * 60);
+    let long_url = build_url(&input.url);
+    if long_url.contains(FRONTEND_URL.as_str()) || long_url.contains(BASE_URL.as_str()) {
+        return Err((StatusCode::BAD_REQUEST, "Circular redirect".to_string()));
+    }
     let url = Urls {
         id: short_code.clone(),
-        long_url: build_url(&input.url),
+        long_url,
         // Use expiration_days from input, convert to seconds
         expiration_date: mongodb::bson::DateTime::now().saturating_add_duration(duration),
     };
@@ -59,11 +59,7 @@ async fn create_url(
         .await
         .map_err(internal_error)?;
     // build url with header
-    let short_url = format!(
-        "{}/{}",
-        std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".into()),
-        short_code
-    );
+    let short_url = format!("{}/{}", *BASE_URL, short_code);
     let response = UrlResponse {
         short_code: short_url,
     };

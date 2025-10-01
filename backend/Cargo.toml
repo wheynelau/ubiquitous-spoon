@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 axum = { version = "0.8.6" }
 base62 = "2.2.3"
-chrono = "0.4.42"
+lazy_static = "1.4.0"
 mongodb = "3.3.0"
 redis = { version = "0.32.6", features = ["aio", "async-std-comp", "tokio-comp"] }
 serde = { version = "1.0.228", features = ["derive"] }

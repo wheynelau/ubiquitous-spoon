@@ -16,6 +16,14 @@ pub mod telemetry;
 
 use models::AppState;
 
+// Environment variable constants - read once at startup
+lazy_static::lazy_static! {
+    pub static ref BASE_URL: String = std::env::var("BASE_URL")
+        .unwrap_or_else(|_| "http://localhost:3000".into());
+    pub static ref FRONTEND_URL: String = std::env::var("FRONTEND_URL")
+        .unwrap_or_else(|_| "http://localhost:8080".into());
+}
+
 #[tokio::main]
 async fn main() {
     // use tokio
