@@ -60,12 +60,11 @@ async fn main() {
         .await
         .unwrap();
 
-    let index_options = IndexOptions::builder()
-        .expire_after(Duration::from_secs(60))
-        .build();
+    // Create TTL index on expiration_date field - MongoDB will automatically
+    // delete documents when their expiration_date field is reached
     let index = IndexModel::builder()
         .keys(doc! { "expiration_date": 1 })
-        .options(index_options)
+        .options(IndexOptions::builder().expire_after(Duration::from_secs(0)).build())
         .build();
 
     let collection = mongodb_client.database("axum-mongo").collection("urls");

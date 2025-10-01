@@ -21,6 +21,7 @@ use crate::{BASE_URL, FRONTEND_URL};
 // defining routes and state
 pub fn app(state: AppState) -> Router {
     Router::new()
+        .route("/health", get(health_check))
         .route("/shorten", post(create_url))
         .route("/{short_code}", get(redirect_url))
         .layer(
@@ -31,6 +32,12 @@ pub fn app(state: AppState) -> Router {
         )
         .layer(TraceLayer::new_for_http())
         .with_state(state)
+}
+
+// health check endpoint
+#[instrument]
+async fn health_check() -> &'static str {
+    "OK"
 }
 
 // handler to create a new URL
