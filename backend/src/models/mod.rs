@@ -1,6 +1,7 @@
 use mongodb::Collection;
 use redis::aio::MultiplexedConnection;
 use serde::{Deserialize, Serialize};
+use validator::Validate;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Urls {
@@ -10,9 +11,16 @@ pub struct Urls {
     pub expiration_date: mongodb::bson::DateTime,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Validate, Deserialize, Serialize)]
 pub struct PostData {
     pub url: String,
+    #[validate(range(min = 1, exclusive_max = 365))]
+    #[serde(default = "default_expiration_days")]
+    pub expiration_days: u64,
+}
+
+fn default_expiration_days() -> u64 {
+    7
 }
 
 #[derive(Debug, Deserialize, Serialize)]

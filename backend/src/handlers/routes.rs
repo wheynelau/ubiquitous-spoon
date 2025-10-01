@@ -48,12 +48,12 @@ async fn create_url(
 
     let id = get_idx(&mut state.redis).await?;
     let short_code = format!("{:0>8}", base62::encode(id));
+    let duration = Duration::from_secs(input.expiration_days * 24 * 60 * 60);
     let url = Urls {
         id: short_code.clone(),
         long_url: build_url(&input.url),
-        // hard code this to current date + 1 hour
-        expiration_date: mongodb::bson::DateTime::now()
-            .saturating_add_duration(Duration::from_secs(3600)),
+        // Use expiration_days from input, convert to seconds
+        expiration_date: mongodb::bson::DateTime::now().saturating_add_duration(duration),
     };
     mongodb_put(&state.mongodb, url)
         .await

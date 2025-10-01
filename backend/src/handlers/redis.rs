@@ -21,6 +21,19 @@ pub async fn get_idx(
 async fn increment_redis_batch(
     redis: &mut redis::aio::MultiplexedConnection,
 ) -> Result<(), (StatusCode, String)> {
+    // First check if the key exists, if not initialize it
+    let exists: bool = redis
+        .exists(KEY)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if !exists {
+        let _: () = redis
+            .set(KEY, 0)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    }
+
     let (old_val, new_val): (u64, u64) = pipe()
         .atomic() // This makes it a transaction (MULTI/EXEC)
         .get(KEY)

@@ -7,14 +7,6 @@ services:
     restart: always
     env_file: sample.env
 
-  mongo-express:
-    image: mongo-express
-    restart: always
-    ports:
-      - 8081:8081
-    env_file: sample.env
-
-
   redis:
     image: redis
     restart: always
@@ -36,7 +28,7 @@ services:
       context: ../../backend
       dockerfile: Dockerfile
     ports:
-      - 3000:3000
+      - 3000:3000 # Expose backend for redirects and frontend access
     depends_on:
       - mongo
       - redis
