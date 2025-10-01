@@ -9,7 +9,12 @@ pub(super) async fn mongodb_lookup(
     state: &Collection<Urls>,
     short_code: &str,
 ) -> Result<Option<Urls>, mongodb::error::Error> {
-    state.find_one(doc! { "_id": short_code }).await
+    // find document and check if it's not expired
+    let now = mongodb::bson::DateTime::now();
+    state.find_one(doc! { 
+        "_id": short_code,
+        "expiration_date": { "$gt": now }
+    }).await
 }
 
 #[instrument]
