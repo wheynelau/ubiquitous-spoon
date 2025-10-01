@@ -1,7 +1,10 @@
-**/target
-**/dist
-LICENSES
-LICENSE
-temp
+# Ignore documentation
 README.md
-Dockerfile
+
+# Ignore git files
+.git
+.gitignore
+
+# Ignore any temporary files
+*.tmp
+*.log

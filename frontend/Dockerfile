@@ -1,26 +1,48 @@
-FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
-WORKDIR /app
+# Use nginx to serve static files
+FROM nginx:alpine
 
-# Install `dx` early to cache this layer
-RUN curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-RUN cargo binstall dioxus-cli --root /.cargo -y --force
-ENV PATH="/.cargo/bin:$PATH"
+# Install envsubst for environment variable substitution
+RUN apk add --no-cache gettext
 
-FROM chef AS planner
-COPY . .
-RUN cargo chef prepare --recipe-path recipe.json
+# Copy static files to nginx html directory
+COPY index.html /usr/share/nginx/html/
+COPY styles.css /usr/share/nginx/html/
+COPY script.js /usr/share/nginx/html/
 
-FROM chef AS builder
-COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
-COPY . .
+# Create a template for index.html with environment variable substitution
+RUN cp /usr/share/nginx/html/index.html /usr/share/nginx/html/index.html.template
 
+# Create nginx configuration for SPA
+RUN echo 'server { \
+    listen 80; \
+    server_name localhost; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    \
+    # Handle client-side routing \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+    \
+    # Cache static assets \
+    location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg)$ { \
+        expires 1y; \
+        add_header Cache-Control "public, immutable"; \
+    } \
+    \
+    # Security headers \
+    add_header X-Frame-Options "SAMEORIGIN" always; \
+    add_header X-Content-Type-Options "nosniff" always; \
+    add_header X-XSS-Protection "1; mode=block" always; \
+}' > /etc/nginx/conf.d/default.conf
 
-# Create the final bundle folder. Bundle always executes in release mode with optimizations enabled
-RUN dx bundle --platform web --release --out-dir web
+# Expose port 80
+EXPOSE 80
 
-FROM nginx:alpine AS runtime
-LABEL org.opencontainers.image.source="https://github.com/wheynelau/ubiquitous-spoon"
-COPY --from=builder /app/web/public /usr/share/nginx/html
-EXPOSE 8080
+# Create startup script that substitutes environment variables
+RUN echo '#!/bin/sh' > /docker-entrypoint.d/20-envsubst-on-templates.sh && \
+    echo 'envsubst '"'"'${BASE_URL}'"'"' < /usr/share/nginx/html/index.html.template > /usr/share/nginx/html/index.html' >> /docker-entrypoint.d/20-envsubst-on-templates.sh && \
+    chmod +x /docker-entrypoint.d/20-envsubst-on-templates.sh
+
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

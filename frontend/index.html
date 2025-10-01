@@ -1,11 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="base-url" content="${BASE_URL}">
     <title>URL Shortener</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="main"></div>
+    <div class="container">
+        <header>
+            <h1>🔗 URL Shortener</h1>
+            <p>Transform long URLs into short, shareable links</p>
+        </header>
+
+        <main>
+            <form id="urlForm" class="url-form">
+                <div class="input-group">
+                    <input 
+                        type="url" 
+                        id="urlInput" 
+                        placeholder="Enter your long URL here..." 
+                        required
+                    >
+                    <button type="submit" id="submitBtn">
+                        <span class="btn-text">Shorten URL</span>
+                        <span class="btn-loading" style="display: none;">Shortening...</span>
+                    </button>
+                </div>
+                <div class="expiration-group">
+                    <div class="expiration-header">
+                        <label for="expirationInput" class="expiration-label">
+                            <span class="label-text">Expiration</span>
+                            <span class="label-optional">Optional</span>
+                        </label>
+                    </div>
+                    <div class="expiration-input-container">
+                        <input 
+                            type="number" 
+                            id="expirationInput" 
+                            placeholder="7"
+                            min="1"
+                            max="365"
+                            class="expiration-input"
+                        >
+                        <span class="input-suffix">days</span>
+                    </div>
+                    <small class="expiration-help">Leave empty for default (7 days)</small>
+                </div>
+            </form>
+
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+            <div id="resultContainer" class="result-container" style="display: none;">
+                <h3>✅ Your shortened URL:</h3>
+                <div class="result-box">
+                    <input type="text" id="shortUrl" readonly>
+                    <button id="copyBtn" class="copy-btn">📋 Copy</button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Made by <a href="https://github.com/wheynelau">Wayne</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
